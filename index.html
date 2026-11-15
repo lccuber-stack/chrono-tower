@@ -247,94 +247,52 @@
 
 <script>
 (function() {
-  // Generate matching 4-Block Ground-to-Space Apple Touch Icon dynamically for iOS bookmarking
-  try {
-    var iconCanvas = document.createElement('canvas');
-    iconCanvas.width = 180;
-    iconCanvas.height = 180;
-    var iCtx = iconCanvas.getContext('2d');
+  // Render the exact 4-Block Ground-to-Space SVG icon onto a 180x180 canvas without path bleed
+  (function generateHomeScreenIcon() {
+    try {
+      var svgEl = document.querySelector('svg.app-icon');
+      if (!svgEl) return;
+      var clone = svgEl.cloneNode(true);
+      clone.setAttribute('width', '180');
+      clone.setAttribute('height', '180');
+      // Remove rounded rect corners on the PNG so iOS applies its native squircle mask cleanly
+      var bgRect = clone.querySelector('rect');
+      if (bgRect) bgRect.removeAttribute('rx');
 
-    var ig = iCtx.createLinearGradient(0, 0, 0, 180);
-    ig.addColorStop(0, '#090d1a');
-    ig.addColorStop(0.55, '#1b2a4a');
-    ig.addColorStop(1, '#2d6a4f');
-    iCtx.fillStyle = ig;
-    iCtx.fillRect(0, 0, 180, 180);
+      var svgString = new XMLSerializer().serializeToString(clone);
+      var svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      var url = URL.createObjectURL(svgBlob);
 
-    iCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    iCtx.beginPath();
-    iCtx.arc(39, 33, 2.25, 0, Math.PI * 2);
-    iCtx.arc(138, 27, 2.7, 0, Math.PI * 2);
-    iCtx.arc(57, 54, 1.65, 0, Math.PI * 2);
-    iCtx.fill();
+      var img = new Image();
+      img.onload = function() {
+        var iconCanvas = document.createElement('canvas');
+        iconCanvas.width = 180;
+        iconCanvas.height = 180;
+        var iCtx = iconCanvas.getContext('2d');
+        iCtx.drawImage(img, 0, 0, 180, 180);
+        URL.revokeObjectURL(url);
 
-    iCtx.fillStyle = 'rgba(255, 230, 109, 0.9)';
-    iCtx.beginPath();
-    iCtx.arc(120, 51, 1.8, 0, Math.PI * 2);
-    iCtx.fill();
+        var dataUrl = iconCanvas.toDataURL('image/png');
+        var existingLinks = document.querySelectorAll('link[rel*="icon"]');
+        for (var l = 0; l < existingLinks.length; l++) {
+          existingLinks[l].parentNode.removeChild(existingLinks[l]);
+        }
 
-    iCtx.fillStyle = '#1b4332';
-    iCtx.beginPath();
-    iCtx.moveTo(0, 144);
-    iCtx.quadraticCurveTo(90, 126, 180, 144);
-    iCtx.lineTo(180, 180);
-    iCtx.lineTo(0, 180);
-    iCtx.closePath();
-    iCtx.fill();
+        var appleLink = document.createElement('link');
+        appleLink.rel = 'apple-touch-icon';
+        appleLink.sizes = '180x180';
+        appleLink.href = dataUrl;
+        document.head.appendChild(appleLink);
 
-    // Draw each block using exact 1.5x scaled coordinates of the 120x120 SVG icon
-    function drawMiniBlock(cx, cy, hw, hh, depth, topC, leftC, rightC) {
-      iCtx.fillStyle = topC;
-      iCtx.beginPath();
-      iCtx.moveTo(cx, cy - hh);
-      iCtx.lineTo(cx + hw, cy);
-      iCtx.lineTo(cx, cy + hh);
-      iCtx.lineTo(cx - hw, cy);
-      iCtx.closePath();
-      iCtx.fill();
-
-      iCtx.fillStyle = leftC;
-      iCtx.beginPath();
-      iCtx.moveTo(cx - hw, cy);
-      iCtx.lineTo(cx, cy + hh);
-      iCtx.lineTo(cx, cy + hh + depth);
-      iCtx.lineTo(cx - hw, cy + depth);
-      iCtx.closePath();
-      iCtx.fill();
-
-      iCtx.fillStyle = rightC;
-      iCtx.beginPath();
-      iCtx.moveTo(cx, cy + hh);
-      iCtx.lineTo(cx + hw, cy);
-      iCtx.lineTo(cx + hw, cy + depth);
-      iCtx.lineTo(cx, cy + hh + depth);
-      iCtx.closePath();
-      iCtx.fill();
-    }
-
-    drawMiniBlock(90, 126, 39, 18, 12, '#4cc9f0', '#4361ee', '#3a0ca3');
-    drawMiniBlock(90, 102, 34.5, 16.5, 10.5, '#00f5d4', '#00bbf9', '#0077b6');
-    drawMiniBlock(90, 78, 30, 15, 10.5, '#fee440', '#f9c74f', '#f8961e');
-    drawMiniBlock(90, 52.5, 25.5, 13.5, 10.5, '#ff70a6', '#f72585', '#b5179e');
-
-    var dataUrl = iconCanvas.toDataURL('image/png');
-    var existingLinks = document.querySelectorAll('link[rel*="icon"]');
-    for (var l = 0; l < existingLinks.length; l++) {
-      existingLinks[l].parentNode.removeChild(existingLinks[l]);
-    }
-
-    var appleLink = document.createElement('link');
-    appleLink.rel = 'apple-touch-icon';
-    appleLink.sizes = '180x180';
-    appleLink.href = dataUrl;
-    document.head.appendChild(appleLink);
-
-    var favLink = document.createElement('link');
-    favLink.rel = 'icon';
-    favLink.type = 'image/png';
-    favLink.href = dataUrl;
-    document.head.appendChild(favLink);
-  } catch (e) {}
+        var favLink = document.createElement('link');
+        favLink.rel = 'icon';
+        favLink.type = 'image/png';
+        favLink.href = dataUrl;
+        document.head.appendChild(favLink);
+      };
+      img.src = url;
+    } catch (e) {}
+  })();
 
   var canvas = document.getElementById('c');
   var ctx = canvas.getContext('2d');
