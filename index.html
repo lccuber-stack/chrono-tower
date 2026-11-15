@@ -461,65 +461,76 @@
     });
   }
 
+  // International Space Station (ISS) in upper Earth orbit right before the Moon (Levels 15 - 19)
+  var iss = {
+    x: -360,
+    y: 17 * BLOCK_H + 60,
+    speed: 24
+  };
+
   // Moon Meteors (Levels 20 - 39)
   var meteors = [];
-  for (var meIdx = 0; meIdx < 7; meIdx++) {
+  for (var mIdx = 0; mIdx < 4; mIdx++) {
     meteors.push({
       x: (Math.random() - 0.5) * 1200,
-      y: 20 * BLOCK_H + 120 + meIdx * 110,
-      speed: 220 + Math.random() * 150,
-      len: 35 + Math.random() * 30
+      y: 20 * BLOCK_H + 150 + mIdx * 135,
+      vx: -190 - Math.random() * 120,
+      vy: -75 - Math.random() * 45,
+      len: 42 + Math.random() * 36
     });
   }
 
-  // Moon & Deep Space Asteroids (Levels 20 - 39)
+  // Moon Asteroids (Levels 20 - 39)
   var asteroids = [];
-  for (var asIdx = 0; asIdx < 6; asIdx++) {
+  for (var asIdx = 0; asIdx < 3; asIdx++) {
     asteroids.push({
-      x: (Math.random() - 0.5) * 1100,
-      y: 20 * BLOCK_H + 140 + asIdx * 125,
-      r: 16 + Math.random() * 16,
-      vx: (Math.random() < 0.5 ? 1 : -1) * (18 + Math.random() * 22),
+      x: (Math.random() - 0.5) * 1200,
+      y: 20 * BLOCK_H + 180 + asIdx * 165,
+      vx: (asIdx % 2 === 0 ? 1 : -1) * (24 + Math.random() * 22),
+      r: 14 + Math.random() * 14,
       rot: Math.random() * Math.PI * 2,
-      rotSpd: (Math.random() - 0.5) * 1.4
+      vRot: (Math.random() - 0.5) * 1.4
     });
   }
 
   // Mars Martians & Flying Saucers (Levels 40+)
   var aliens = [];
-  for (var alIdx = 0; alIdx < 5; alIdx++) {
+  for (var alIdx = 0; alIdx < 3; alIdx++) {
     aliens.push({
       x: (Math.random() - 0.5) * 1000,
-      y: 40 * BLOCK_H + 140 + alIdx * 140,
-      speed: (Math.random() < 0.5 ? 1 : -1) * (48 + Math.random() * 35),
+      y: 40 * BLOCK_H + 170 + alIdx * 210,
+      speed: (Math.random() < 0.5 ? 1 : -1) * (44 + Math.random() * 28),
       phase: Math.random() * Math.PI * 2
     });
   }
 
   // Mars Space Rockets (Levels 40+)
   var rockets = [];
-  for (var rkIdx = 0; rkIdx < 4; rkIdx++) {
+  for (var rkIdx = 0; rkIdx < 2; rkIdx++) {
     rockets.push({
       x: (Math.random() - 0.5) * 1050,
-      y: 40 * BLOCK_H + 180 + rkIdx * 165,
+      y: 40 * BLOCK_H + 240 + rkIdx * 260,
       dir: rkIdx % 2 === 0 ? 1 : -1,
-      speed: 95 + Math.random() * 45
+      speed: 88 + Math.random() * 35
     });
   }
 
   function isoToScreen(x, y, z) {
-    var originX = W / 2 - cameraX + cameraZ;
-    var originY = H * 0.68 + cameraY;
-    var sx = originX + (x - z) * 0.866;
-    var sy = originY + (x + z) * 0.5 - y;
+    var relX = x - cameraX;
+    var relY = y - cameraY;
+    var relZ = z - cameraZ;
+    var originX = W / 2;
+    var originY = H * 0.68;
+    var sx = originX + (relX - relZ) * 0.866;
+    var sy = originY + (relX + relZ) * 0.5 - relY;
     return { x: sx, y: sy };
   }
 
   function hsl(h, s, l) {
-    return 'hsl(' + ((h % 360 + 360) % 360) + ',' + s + '%,' + l + '%)';
+    return 'hsl(' + (((h % 360) + 360) % 360) + ',' + s + '%,' + l + '%)';
   }
 
-  function drawIsoBox(x, y, z, w, h, d, hue, isRecordFloor) {
+  function drawIsoBox(x, y, z, w, h, d, hue, isGoldRecord) {
     var p0 = isoToScreen(x, y + h, z);
     var p1 = isoToScreen(x + w, y + h, z);
     var p2 = isoToScreen(x + w, y + h, z + d);
@@ -529,7 +540,8 @@
     var b2 = isoToScreen(x + w, y, z + d);
     var b3 = isoToScreen(x, y, z + d);
 
-    ctx.fillStyle = hsl(hue, 72, 68);
+    // Top face
+    ctx.fillStyle = isGoldRecord ? '#ffd166' : hsl(hue, 72, 66);
     ctx.beginPath();
     ctx.moveTo(p0.x, p0.y);
     ctx.lineTo(p1.x, p1.y);
@@ -538,11 +550,12 @@
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = isRecordFloor ? 'rgba(255, 230, 109, 0.9)' : 'rgba(255, 255, 255, 0.25)';
-    ctx.lineWidth = isRecordFloor ? 2 : 1;
+    ctx.strokeStyle = isGoldRecord ? '#ffffff' : 'rgba(255, 255, 255, 0.24)';
+    ctx.lineWidth = isGoldRecord ? 2 : 1;
     ctx.stroke();
 
-    ctx.fillStyle = hsl(hue, 64, 52);
+    // Left-front face (z + d)
+    ctx.fillStyle = isGoldRecord ? '#f4a261' : hsl(hue, 65, 50);
     ctx.beginPath();
     ctx.moveTo(p3.x, p3.y);
     ctx.lineTo(p2.x, p2.y);
@@ -551,7 +564,8 @@
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = hsl(hue, 58, 38);
+    // Right-front face (x + w)
+    ctx.fillStyle = isGoldRecord ? '#e76f51' : hsl(hue, 60, 36);
     ctx.beginPath();
     ctx.moveTo(p2.x, p2.y);
     ctx.lineTo(p1.x, p1.y);
@@ -561,89 +575,23 @@
     ctx.fill();
   }
 
-  function drawRecordPointer(floorIndex, nowSec) {
-    if (floorIndex <= 0) return;
-    var recordY = floorIndex * BLOCK_H + BLOCK_H * 0.9;
-    var top = stack[stack.length - 1];
-    var targetPt = isoToScreen(top.x + top.w, recordY, top.z);
-
-    if (targetPt.y < -80 || targetPt.y > H + 80) return;
-
-    var isBeaten = score >= floorIndex;
-    var mainColor = isBeaten ? '#00f5d4' : '#ffe66d';
-    var darkColor = isBeaten ? '#00bbf9' : '#f59e0b';
-    var bounce = Math.sin(nowSec * 5) * 6;
-
-    var tipX = targetPt.x + 14 + bounce;
-    var tipY = targetPt.y;
-
-    ctx.save();
-    ctx.shadowColor = mainColor;
-    ctx.shadowBlur = 14;
-
-    ctx.fillStyle = mainColor;
-    ctx.beginPath();
-    ctx.moveTo(tipX, tipY);
-    ctx.lineTo(tipX + 24, tipY - 16);
-    ctx.lineTo(tipX + 24, tipY - 7);
-    ctx.lineTo(tipX + 54, tipY - 7);
-    ctx.lineTo(tipX + 54, tipY + 7);
-    ctx.lineTo(tipX + 24, tipY + 7);
-    ctx.lineTo(tipX + 24, tipY + 16);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = darkColor;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.restore();
-
-    var badgeX = tipX + 62;
-    var badgeY = tipY - 13;
-    var badgeW = 84;
-    var badgeH = 26;
-
-    ctx.fillStyle = 'rgba(12, 18, 36, 0.85)';
-    ctx.strokeStyle = mainColor;
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 8);
-    } else {
-      ctx.rect(badgeX, badgeY, badgeW, badgeH);
-    }
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = mainColor;
-    ctx.font = '800 11px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(isBeaten ? 'PASSED ' + floorIndex : 'BEST ' + floorIndex, badgeX + badgeW / 2, badgeY + badgeH / 2);
-  }
-
-  function updateAltitudeLabel() {
+  function updateAltitudeTag() {
     var tag = document.getElementById('altitude-tag');
     if (score >= 40) {
-      tag.textContent = 'MARS · ALIEN ORBIT';
-      tag.style.color = '#ff70a6';
-      tag.style.borderColor = 'rgba(255, 112, 166, 0.5)';
-      tag.style.background = 'rgba(255, 112, 166, 0.16)';
+      tag.textContent = 'MARS · RED FRONTIER';
+      tag.style.color = '#ff758f';
+      tag.style.borderColor = 'rgba(255, 117, 143, 0.45)';
+      tag.style.background = 'rgba(255, 117, 143, 0.16)';
     } else if (score >= 20) {
-      tag.textContent = 'THE MOON · METEOR BELT';
-      tag.style.color = '#4cc9f0';
-      tag.style.borderColor = 'rgba(76, 201, 240, 0.5)';
-      tag.style.background = 'rgba(76, 201, 240, 0.16)';
-    } else if (score >= 12) {
-      tag.textContent = 'EARTH · STRATOSPHERE';
+      tag.textContent = 'MOON · LUNAR ORBIT';
       tag.style.color = '#90e0ef';
       tag.style.borderColor = 'rgba(144, 224, 239, 0.45)';
       tag.style.background = 'rgba(144, 224, 239, 0.16)';
-    } else if (score >= 4) {
-      tag.textContent = 'EARTH · CLOUD LAYER';
-      tag.style.color = '#ffffff';
-      tag.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-      tag.style.background = 'rgba(255, 255, 255, 0.15)';
+    } else if (score >= 10) {
+      tag.textContent = 'EARTH · HIGH ALTITUDE';
+      tag.style.color = '#ffe66d';
+      tag.style.borderColor = 'rgba(255, 230, 109, 0.4)';
+      tag.style.background = 'rgba(255, 230, 109, 0.16)';
     } else {
       tag.textContent = 'EARTH · GROUND LEVEL';
       tag.style.color = '#ffe66d';
@@ -652,17 +600,24 @@
     }
   }
 
+  function showBanner(text, color) {
+    var el = document.getElementById('combo-msg');
+    el.textContent = text;
+    el.style.color = color || '#ffe66d';
+    el.style.opacity = '1';
+  }
+
   function spawnNextBlock() {
     var top = stack[stack.length - 1];
-    var axis = (score % 2 === 0) ? 'x' : 'z';
-    var speed = Math.min(340, 155 + score * 4.2);
-    var hue = baseHue + score * 7;
+    var axis = stack.length % 2 === 1 ? 'x' : 'z';
+    var speed = Math.min(350, 155 + stack.length * 4.2);
+    var hue = baseHue + stack.length * 7;
     var span = axis === 'x' ? top.w : top.d;
     var swingRange = span + 55;
 
     activeBlock = {
       x: axis === 'x' ? (top.x - swingRange) : top.x,
-      y: top.y + top.h,
+      y: top.y + BLOCK_H,
       z: axis === 'z' ? (top.z - swingRange) : top.z,
       w: top.w,
       d: top.d,
@@ -674,30 +629,15 @@
     };
   }
 
-  function initEarthFoundation() {
+  function resetToEarth() {
+    baseHue = 195;
     currentMaxSpan = BASE_SIZE;
     stack = [];
-    stack.push({
-      x: -BASE_SIZE / 2,
-      y: 0,
-      z: -BASE_SIZE / 2,
-      w: BASE_SIZE,
-      h: BLOCK_H * 1.4,
-      d: BASE_SIZE,
-      hue: baseHue
-    });
-  }
-
-  function startGame() {
-    baseHue = 195;
     debris = [];
     ripples = [];
     score = 0;
     combo = 0;
     passedRecord = false;
-
-    initEarthFoundation();
-
     cameraX = 0;
     cameraY = 0;
     cameraZ = 0;
@@ -705,11 +645,24 @@
     targetCameraY = 0;
     targetCameraZ = 0;
 
+    stack.push({
+      x: -BASE_SIZE / 2,
+      y: 0,
+      z: -BASE_SIZE / 2,
+      w: BASE_SIZE,
+      h: BLOCK_H,
+      d: BASE_SIZE,
+      hue: baseHue,
+      isRecord: false
+    });
+  }
+
+  function startGame() {
+    resetToEarth();
     document.getElementById('score').textContent = '0';
-    updateAltitudeLabel();
     document.getElementById('combo-msg').style.opacity = '0';
     document.getElementById('overlay').classList.add('hidden');
-
+    updateAltitudeTag();
     gameState = 'PLAYING';
     spawnNextBlock();
   }
@@ -725,32 +678,35 @@
       document.getElementById('best').textContent = 'BEST: ' + bestScore;
     }
     document.getElementById('ov-title').textContent = 'TOWER COMPLETE';
-    document.getElementById('ov-sub').textContent = 'Height: ' + score + ' floors · Best: ' + bestScore;
+    document.getElementById('ov-sub').textContent = 'Altitude Reached: ' + score + ' floors · Best: ' + bestScore;
     document.getElementById('play-btn').textContent = 'PLAY AGAIN';
     document.getElementById('overlay').classList.remove('hidden');
   }
 
-  function transitionPlanetBase(newFloor, planetHue, newSize) {
+  function transitionToPlanet(planetScore, newSize, newHue, bannerText, bannerColor) {
     currentMaxSpan = newSize;
-    stack = [{
+    baseHue = newHue;
+    var planetY = planetScore * BLOCK_H;
+    stack.push({
       x: -newSize / 2,
-      y: newFloor * BLOCK_H,
+      y: planetY,
       z: -newSize / 2,
       w: newSize,
-      h: BLOCK_H * 1.4,
+      h: BLOCK_H,
       d: newSize,
-      hue: planetHue
-    }];
-    debris = [];
-    ripples = [{
+      hue: newHue,
+      isRecord: false
+    });
+    ripples.push({
       x: -newSize / 2,
-      y: newFloor * BLOCK_H + BLOCK_H * 1.4,
+      y: planetY,
       z: -newSize / 2,
       w: newSize,
       d: newSize,
-      alpha: 1.0,
+      alpha: 1,
       expand: 0
-    }];
+    });
+    showBanner(bannerText, bannerColor);
   }
 
   function placeBlock() {
@@ -758,6 +714,12 @@
     var top = stack[stack.length - 1];
     var b = activeBlock;
     var SNAP_TOLERANCE = 7;
+
+    var nextFloor = score + 1;
+    var hitRecord = bestScore > 0 && nextFloor === bestScore && !passedRecord;
+    if (hitRecord) {
+      passedRecord = true;
+    }
 
     if (b.axis === 'x') {
       var deltaX = b.x - top.x;
@@ -770,14 +732,14 @@
           newW = Math.min(currentMaxSpan, top.w + grow);
           newX = Math.max(-currentMaxSpan / 2, top.x - (newW - top.w) / 2);
         }
-        stack.push({ x: newX, y: b.y, z: top.z, w: newW, h: BLOCK_H, d: top.d, hue: b.hue });
+        stack.push({ x: newX, y: b.y, z: top.z, w: newW, h: BLOCK_H, d: top.d, hue: b.hue, isRecord: hitRecord });
         ripples.push({ x: newX, y: b.y, z: top.z, w: newW, d: top.d, alpha: 0.9, expand: 0 });
         playNote(combo - 1, false);
-        showCombo(combo);
+        showBanner(hitRecord ? 'NEW RECORD!' : (combo >= 5 ? 'EXPAND! x' + combo : 'PERFECT x' + combo), hitRecord ? '#ffd166' : '#ffe66d');
       } else if (Math.abs(deltaX) >= top.w) {
         debris.push({
           x: b.x, y: b.y, z: top.z, w: top.w, h: BLOCK_H, d: top.d,
-          hue: b.hue, vy: 0, vx: deltaX > 0 ? 55 : -55, vz: 0,
+          hue: b.hue, vy: 0, vx: deltaX > 0 ? 50 : -50, vz: 0,
           behind: deltaX < 0
         });
         activeBlock = null;
@@ -785,19 +747,20 @@
         return;
       } else {
         combo = 0;
-        document.getElementById('combo-msg').style.opacity = '0';
+        if (!hitRecord) document.getElementById('combo-msg').style.opacity = '0';
         var overlapW = Math.max(4, top.w - Math.abs(deltaX));
         var cutW = Math.abs(deltaX);
         var placedX = deltaX > 0 ? b.x : top.x;
         var cutX = deltaX > 0 ? (placedX + overlapW) : b.x;
 
-        stack.push({ x: placedX, y: b.y, z: top.z, w: overlapW, h: BLOCK_H, d: top.d, hue: b.hue });
+        stack.push({ x: placedX, y: b.y, z: top.z, w: overlapW, h: BLOCK_H, d: top.d, hue: b.hue, isRecord: hitRecord });
         debris.push({
           x: cutX, y: b.y, z: top.z, w: cutW, h: BLOCK_H, d: top.d,
           hue: b.hue, vy: 0, vx: deltaX > 0 ? 75 : -75, vz: 0,
           behind: deltaX < 0
         });
         playNote(0, false);
+        if (hitRecord) showBanner('NEW RECORD!', '#ffd166');
       }
     } else {
       var deltaZ = b.z - top.z;
@@ -810,14 +773,14 @@
           newD = Math.min(currentMaxSpan, top.d + growZ);
           newZ = Math.max(-currentMaxSpan / 2, top.z - (newD - top.d) / 2);
         }
-        stack.push({ x: top.x, y: b.y, z: newZ, w: top.w, h: BLOCK_H, d: newD, hue: b.hue });
+        stack.push({ x: top.x, y: b.y, z: newZ, w: top.w, h: BLOCK_H, d: newD, hue: b.hue, isRecord: hitRecord });
         ripples.push({ x: top.x, y: b.y, z: newZ, w: top.w, d: newD, alpha: 0.9, expand: 0 });
         playNote(combo - 1, false);
-        showCombo(combo);
+        showBanner(hitRecord ? 'NEW RECORD!' : (combo >= 5 ? 'EXPAND! x' + combo : 'PERFECT x' + combo), hitRecord ? '#ffd166' : '#ffe66d');
       } else if (Math.abs(deltaZ) >= top.d) {
         debris.push({
           x: top.x, y: b.y, z: b.z, w: top.w, h: BLOCK_H, d: top.d,
-          hue: b.hue, vy: 0, vx: 0, vz: deltaZ > 0 ? 55 : -55,
+          hue: b.hue, vy: 0, vx: 0, vz: deltaZ > 0 ? 50 : -50,
           behind: deltaZ < 0
         });
         activeBlock = null;
@@ -825,45 +788,32 @@
         return;
       } else {
         combo = 0;
-        document.getElementById('combo-msg').style.opacity = '0';
+        if (!hitRecord) document.getElementById('combo-msg').style.opacity = '0';
         var overlapD = Math.max(4, top.d - Math.abs(deltaZ));
         var cutD = Math.abs(deltaZ);
         var placedZ = deltaZ > 0 ? b.z : top.z;
         var cutZ = deltaZ > 0 ? (placedZ + overlapD) : b.z;
 
-        stack.push({ x: top.x, y: b.y, z: placedZ, w: top.w, h: BLOCK_H, d: overlapD, hue: b.hue });
+        stack.push({ x: top.x, y: b.y, z: placedZ, w: top.w, h: BLOCK_H, d: overlapD, hue: b.hue, isRecord: hitRecord });
         debris.push({
           x: top.x, y: b.y, z: cutZ, w: top.w, h: BLOCK_H, d: cutD,
           hue: b.hue, vy: 0, vx: 0, vz: deltaZ > 0 ? 75 : -75,
           behind: deltaZ < 0
         });
         playNote(0, false);
+        if (hitRecord) showBanner('NEW RECORD!', '#ffd166');
       }
     }
 
-    score += 1;
+    score = nextFloor;
     document.getElementById('score').textContent = String(score);
-    updateAltitudeLabel();
+    updateAltitudeTag();
 
+    // Check planetary stage transitions at Level 20 (Moon) and Level 40 (Mars)
     if (score === 20) {
-      transitionPlanetBase(20, 210, MOON_SIZE);
-      var moonBanner = document.getElementById('combo-msg');
-      moonBanner.textContent = 'WELCOME TO THE MOON!';
-      moonBanner.style.opacity = '1';
+      transitionToPlanet(20, MOON_SIZE, 210, 'MOON REACHED!', '#90e0ef');
     } else if (score === 40) {
-      transitionPlanetBase(40, 14, MARS_SIZE);
-      var marsBanner = document.getElementById('combo-msg');
-      marsBanner.textContent = 'WELCOME TO MARS!';
-      marsBanner.style.opacity = '1';
-    }
-
-    if (!passedRecord && bestScore > 0 && score > bestScore) {
-      passedRecord = true;
-      var el = document.getElementById('combo-msg');
-      el.textContent = 'NEW RECORD!';
-      el.style.opacity = '1';
-      var topBlock = stack[stack.length - 1];
-      ripples.push({ x: topBlock.x, y: topBlock.y, z: topBlock.z, w: topBlock.w, d: topBlock.d, alpha: 1.0, expand: 0 });
+      transitionToPlanet(40, MARS_SIZE, 14, 'MARS REACHED!', '#ff758f');
     }
 
     var latest = stack[stack.length - 1];
@@ -874,15 +824,7 @@
     spawnNextBlock();
   }
 
-  function showCombo(c) {
-    var el = document.getElementById('combo-msg');
-    el.textContent = c >= 5 ? 'EXPAND! x' + c : 'PERFECT x' + c;
-    el.style.opacity = '1';
-  }
-
-  var playBtn = document.getElementById('play-btn');
-  playBtn.addEventListener('click', function(e) {
-    e.preventDefault();
+  document.getElementById('play-btn').addEventListener('click', function(e) {
     e.stopPropagation();
     startGame();
   });
@@ -903,21 +845,21 @@
   var lastTime = performance.now();
 
   function update(dt) {
-    var smooth = Math.min(1, dt * 8);
-    cameraX += (targetCameraX - cameraX) * smooth;
-    cameraY += (targetCameraY - cameraY) * smooth;
-    cameraZ += (targetCameraZ - cameraZ) * smooth;
+    var camLerp = Math.min(1, dt * 6.5);
+    cameraX += (targetCameraX - cameraX) * camLerp;
+    cameraY += (targetCameraY - cameraY) * camLerp;
+    cameraZ += (targetCameraZ - cameraZ) * camLerp;
 
     for (var c = 0; c < clouds.length; c++) {
       clouds[c].x += clouds[c].speed * dt;
-      if (clouds[c].x > 800) clouds[c].x = -800;
+      if (clouds[c].x > 750) clouds[c].x = -750;
     }
 
-    for (var bd = 0; bd < birds.length; bd++) {
-      birds[bd].wingPhase += dt * 11;
-      birds[bd].x += birds[bd].dir * birds[bd].speed * dt;
-      if (birds[bd].x > 700) birds[bd].x = -700;
-      if (birds[bd].x < -700) birds[bd].x = 700;
+    for (var b = 0; b < birds.length; b++) {
+      birds[b].x += birds[b].dir * birds[b].speed * dt;
+      birds[b].wingPhase += 10 * dt;
+      if (birds[b].x > 650) birds[b].x = -650;
+      if (birds[b].x < -650) birds[b].x = 650;
     }
 
     for (var pl = 0; pl < planes.length; pl++) {
@@ -926,26 +868,30 @@
       if (planes[pl].x < -800) planes[pl].x = 800;
     }
 
+    iss.x += iss.speed * dt;
+    if (iss.x > 650) iss.x = -650;
+
     for (var me = 0; me < meteors.length; me++) {
-      meteors[me].y -= meteors[me].speed * dt;
-      meteors[me].x += meteors[me].speed * 0.45 * dt;
-      if (meteors[me].y < cameraY - 350) {
-        meteors[me].y = cameraY + 750 + Math.random() * 250;
-        meteors[me].x = (Math.random() - 0.5) * 1100;
+      meteors[me].x += meteors[me].vx * dt;
+      meteors[me].y += meteors[me].vy * dt;
+      if (meteors[me].x < -700) {
+        meteors[me].x = 700;
+        meteors[me].y = 20 * BLOCK_H + 140 + Math.random() * 520;
       }
     }
 
     for (var as = 0; as < asteroids.length; as++) {
       asteroids[as].x += asteroids[as].vx * dt;
-      asteroids[as].rot += asteroids[as].rotSpd * dt;
+      asteroids[as].rot += asteroids[as].vRot * dt;
       if (asteroids[as].x > 700) asteroids[as].x = -700;
       if (asteroids[as].x < -700) asteroids[as].x = 700;
     }
 
     for (var al = 0; al < aliens.length; al++) {
-      aliens[al].phase += dt * 3;
       aliens[al].x += aliens[al].speed * dt;
-      if (aliens[al].x > 650 || aliens[al].x < -650) aliens[al].speed *= -1;
+      aliens[al].phase += 3.5 * dt;
+      if (aliens[al].x > 650) aliens[al].x = -650;
+      if (aliens[al].x < -650) aliens[al].x = 650;
     }
 
     for (var rk = 0; rk < rockets.length; rk++) {
@@ -980,7 +926,7 @@
 
     for (var i = debris.length - 1; i >= 0; i--) {
       var d = debris[i];
-      d.vy -= 760 * dt;
+      d.vy -= 740 * dt;
       d.y += d.vy * dt;
       d.x += d.vx * dt;
       d.z += d.vz * dt;
@@ -1002,96 +948,98 @@
   function render(now) {
     var time = now * 0.001;
 
+    // Sky gradient transitions smoothly through Earth (0-19), Moon (20-39), and Mars (40+)
     var bg = ctx.createLinearGradient(0, 0, 0, H);
     if (score >= 40) {
-      bg.addColorStop(0, '#14060c');
-      bg.addColorStop(0.55, '#4a141c');
+      bg.addColorStop(0, '#14050c');
+      bg.addColorStop(0.55, '#4a121e');
       bg.addColorStop(1, '#9e2a2b');
     } else if (score >= 20) {
-      bg.addColorStop(0, '#050811');
-      bg.addColorStop(0.6, '#0d1526');
-      bg.addColorStop(1, '#1e293b');
+      bg.addColorStop(0, '#04060d');
+      bg.addColorStop(0.6, '#0d1326');
+      bg.addColorStop(1, '#1d263b');
     } else {
-      var progress = Math.min(1, score / 20);
-      bg.addColorStop(0, hsl(208 + progress * 20, 72, Math.max(12, 46 - progress * 34)));
-      bg.addColorStop(1, hsl(196 + progress * 25, 68, Math.max(20, 72 - progress * 50)));
+      var climb = Math.min(1, cameraY / (19 * BLOCK_H));
+      bg.addColorStop(0, hsl(212, 65, 48 - climb * 38));
+      bg.addColorStop(1, hsl(198, 60, 66 - climb * 44));
     }
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // Stars (visible in Moon, Mars, and upper Earth atmosphere)
-    var starAlpha = score >= 20 ? 0.9 : Math.max(0, (score - 10) / 10);
-    if (starAlpha > 0.02) {
+    // Stars (fade in during upper Earth sky, always visible on Moon & Mars)
+    var starAlpha = score >= 20 ? 0.92 : Math.max(0, Math.min(0.85, (cameraY - 220) / 260));
+    if (starAlpha > 0.01) {
       for (var s = 0; s < stars.length; s++) {
         var st = stars[s];
-        var alpha = starAlpha * (0.45 + 0.55 * Math.sin(time * 2.2 + st.twinkle));
-        ctx.fillStyle = 'rgba(255, 255, 255, ' + alpha.toFixed(2) + ')';
+        var pulse = 0.55 + 0.45 * Math.sin(time * 2.5 + st.twinkle);
+        ctx.fillStyle = 'rgba(255, 255, 255, ' + (starAlpha * pulse).toFixed(2) + ')';
         ctx.beginPath();
-        ctx.arc(st.x * W, st.y * H * 0.78, st.r, 0, Math.PI * 2);
+        ctx.arc(st.x * W, st.y * H * 0.85, st.r, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    // EARTH ZONE (Levels 0 - 19): Ground, Clouds, Birds & Airplanes
+    // EARTH ZONE (Levels 0 - 19): Clouds, Birds, Airplanes, ISS & Grass Horizon
     if (score < 20) {
       for (var c = 0; c < clouds.length; c++) {
         var cl = clouds[c];
         var cy = H * 0.68 + cameraY - cl.y;
-        if (cy > -60 && cy < H + 60) {
+        if (cy > -80 && cy < H + 80) {
           var cx = W / 2 + cl.x;
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
           ctx.beginPath();
           ctx.ellipse(cx, cy, cl.w * 0.5, 16, 0, 0, Math.PI * 2);
-          ctx.ellipse(cx - cl.w * 0.24, cy + 5, cl.w * 0.32, 13, 0, 0, Math.PI * 2);
-          ctx.ellipse(cx + cl.w * 0.24, cy + 5, cl.w * 0.32, 13, 0, 0, Math.PI * 2);
+          ctx.ellipse(cx - cl.w * 0.22, cy - 6, cl.w * 0.3, 14, 0, 0, Math.PI * 2);
+          ctx.ellipse(cx + cl.w * 0.22, cy - 4, cl.w * 0.28, 12, 0, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
-      ctx.strokeStyle = 'rgba(20, 35, 60, 0.65)';
-      ctx.lineWidth = 2;
-      for (var bd = 0; bd < birds.length; bd++) {
-        var br = birds[bd];
-        var by = H * 0.68 + cameraY - br.y;
+      for (var b = 0; b < birds.length; b++) {
+        var bd = birds[b];
+        var by = H * 0.68 + cameraY - bd.y;
         if (by > -40 && by < H + 40) {
-          var bx = W / 2 + br.x;
-          var flap = Math.sin(br.wingPhase) * 6;
+          var bx = W / 2 + bd.x;
+          var flap = Math.sin(bd.wingPhase) * 5;
+          ctx.strokeStyle = 'rgba(20, 30, 48, 0.75)';
+          ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(bx - 10, by - flap);
-          ctx.quadraticCurveTo(bx - 4, by - 5, bx, by);
-          ctx.quadraticCurveTo(bx + 4, by - 5, bx + 10, by - flap);
+          ctx.moveTo(bx - 8, by + flap);
+          ctx.quadraticCurveTo(bx - 4, by - 4, bx, by);
+          ctx.quadraticCurveTo(bx + 4, by - 4, bx + 8, by + flap);
           ctx.stroke();
         }
       }
 
       for (var pl = 0; pl < planes.length; pl++) {
-        var pn = planes[pl];
-        var py = H * 0.68 + cameraY - pn.y;
-        if (py > -50 && py < H + 50) {
-          var px = W / 2 + pn.x;
+        var p = planes[pl];
+        var py = H * 0.68 + cameraY - p.y;
+        if (py > -60 && py < H + 60) {
+          var px = W / 2 + p.x;
           ctx.save();
           ctx.translate(px, py);
-          ctx.scale(pn.dir, 1);
+          if (p.dir < 0) ctx.scale(-1, 1);
 
-          var trailGrad = ctx.createLinearGradient(-18, 0, -95, 0);
-          trailGrad.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-          trailGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-          ctx.fillStyle = trailGrad;
-          ctx.fillRect(-95, -1.5, 77, 3);
+          var trail = ctx.createLinearGradient(-120, 0, -16, 0);
+          trail.addColorStop(0, 'rgba(255, 255, 255, 0)');
+          trail.addColorStop(1, 'rgba(255, 255, 255, 0.45)');
+          ctx.fillStyle = trail;
+          ctx.fillRect(-120, -1.5, 104, 3);
 
           ctx.fillStyle = '#f8fafc';
           ctx.beginPath();
           ctx.ellipse(0, 0, 18, 4.5, 0, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.fillStyle = '#e2e8f0';
+          ctx.fillStyle = '#cbd5e1';
           ctx.beginPath();
           ctx.moveTo(-2, 0);
-          ctx.lineTo(-9, -12);
-          ctx.lineTo(4, 0);
+          ctx.lineTo(-10, -12);
+          ctx.lineTo(-4, 0);
           ctx.closePath();
           ctx.fill();
 
+          ctx.fillStyle = '#ff4d6d';
           ctx.beginPath();
           ctx.moveTo(-14, 0);
           ctx.lineTo(-19, -7);
@@ -1102,19 +1050,121 @@
         }
       }
 
+      // International Space Station (ISS) orbiting before reaching the Moon
+      var issScreenY = H * 0.68 + cameraY - iss.y;
+      if (issScreenY > -90 && issScreenY < H + 90) {
+        var issScreenX = W / 2 + iss.x;
+        ctx.save();
+        ctx.translate(issScreenX, issScreenY);
+        ctx.rotate(-0.14);
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(-58, -2, 116, 4);
+
+        ctx.fillStyle = '#1d4ed8';
+        ctx.strokeStyle = '#93c5fd';
+        ctx.lineWidth = 1;
+        var wingOffsets = [-48, -32, 22, 38];
+        for (var wIdx = 0; wIdx < wingOffsets.length; wIdx++) {
+          var wx = wingOffsets[wIdx];
+          ctx.fillRect(wx, -24, 10, 20);
+          ctx.strokeRect(wx, -24, 10, 20);
+          ctx.fillRect(wx, 4, 10, 20);
+          ctx.strokeRect(wx, 4, 10, 20);
+        }
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(-14, -5, 28, 10);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(-5, -9, 10, 18);
+
+        ctx.fillStyle = Math.sin(time * 6) > 0 ? '#00f5d4' : '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(0, 0, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
       var groundScreenY = H * 0.68 + cameraY;
       if (groundScreenY < H + 260) {
-        var gGrad = ctx.createLinearGradient(0, groundScreenY - 20, 0, H);
+        var horizonY = groundScreenY - 125;
+        var gGrad = ctx.createLinearGradient(0, horizonY, 0, H);
         gGrad.addColorStop(0, '#2d6a4f');
         gGrad.addColorStop(1, '#1b4332');
         ctx.fillStyle = gGrad;
-        ctx.fillRect(0, groundScreenY - 15, W, H - groundScreenY + 280);
+        ctx.fillRect(0, horizonY, W, H - horizonY + 280);
 
-        var pad0 = isoToScreen(-130, 0, -130);
-        var pad1 = isoToScreen(130, 0, -130);
-        var pad2 = isoToScreen(130, 0, 130);
-        var pad3 = isoToScreen(-130, 0, 130);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        // Background forest treeline along the horizon
+        ctx.fillStyle = '#1b4332';
+        for (var tx = 20; tx < W + 40; tx += 36) {
+          var th = 22 + Math.abs(Math.sin(tx * 0.13)) * 16;
+          ctx.beginPath();
+          ctx.moveTo(tx - 16, horizonY + 2);
+          ctx.lineTo(tx, horizonY - th);
+          ctx.lineTo(tx + 16, horizonY + 2);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Cozy houses nestled in the landscape
+        var houses = [
+          { x: W * 0.16, y: horizonY + 18, s: 1.0, wall: '#f8edeb', roof: '#e63946' },
+          { x: W * 0.24, y: horizonY + 34, s: 0.85, wall: '#fae1dd', roof: '#d62828' },
+          { x: W * 0.78, y: horizonY + 22, s: 1.05, wall: '#f1faee', roof: '#e76f51' }
+        ];
+        for (var hs = 0; hs < houses.length; hs++) {
+          var hObj = houses[hs];
+          var hw = 26 * hObj.s;
+          var hh = 18 * hObj.s;
+          // House body
+          ctx.fillStyle = hObj.wall;
+          ctx.fillRect(hObj.x - hw / 2, hObj.y - hh, hw, hh);
+          // Pitched roof
+          ctx.fillStyle = hObj.roof;
+          ctx.beginPath();
+          ctx.moveTo(hObj.x - hw / 2 - 4 * hObj.s, hObj.y - hh);
+          ctx.lineTo(hObj.x, hObj.y - hh - 13 * hObj.s);
+          ctx.lineTo(hObj.x + hw / 2 + 4 * hObj.s, hObj.y - hh);
+          ctx.closePath();
+          ctx.fill();
+          // Warm lit window
+          ctx.fillStyle = '#ffd166';
+          ctx.fillRect(hObj.x - 4 * hObj.s, hObj.y - hh * 0.65, 8 * hObj.s, 7 * hObj.s);
+        }
+
+        // Foreground pine trees on left and right sides of the clearing
+        var fgTrees = [
+          { x: W * 0.08, y: horizonY + 48, s: 1.1 },
+          { x: W * 0.13, y: horizonY + 72, s: 1.25 },
+          { x: W * 0.86, y: horizonY + 52, s: 1.15 },
+          { x: W * 0.92, y: horizonY + 80, s: 1.3 }
+        ];
+        for (var ft = 0; ft < fgTrees.length; ft++) {
+          var tr = fgTrees[ft];
+          ctx.fillStyle = '#3d2c2e';
+          ctx.fillRect(tr.x - 3 * tr.s, tr.y - 6 * tr.s, 6 * tr.s, 8 * tr.s);
+          ctx.fillStyle = '#143627';
+          ctx.beginPath();
+          ctx.moveTo(tr.x - 16 * tr.s, tr.y - 4 * tr.s);
+          ctx.lineTo(tr.x, tr.y - 34 * tr.s);
+          ctx.lineTo(tr.x + 16 * tr.s, tr.y - 4 * tr.s);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = '#24553d';
+          ctx.beginPath();
+          ctx.moveTo(tr.x - 12 * tr.s, tr.y - 16 * tr.s);
+          ctx.lineTo(tr.x, tr.y - 42 * tr.s);
+          ctx.lineTo(tr.x + 12 * tr.s, tr.y - 16 * tr.s);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Grounded 3D isometric stone launchpad beneath the tower
+        var pad0 = isoToScreen(-102, 0, -102);
+        var pad1 = isoToScreen(102, 0, -102);
+        var pad2 = isoToScreen(102, 0, 102);
+        var pad3 = isoToScreen(-102, 0, 102);
+        ctx.fillStyle = '#3a5a40';
         ctx.beginPath();
         ctx.moveTo(pad0.x, pad0.y);
         ctx.lineTo(pad1.x, pad1.y);
@@ -1122,204 +1172,231 @@
         ctx.lineTo(pad3.x, pad3.y);
         ctx.closePath();
         ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       }
     }
 
-    // MOON ZONE (Levels 20 - 39): Crater Surface, Asteroids & Falling Meteors
+    // MOON ZONE (Levels 20 - 39): Cratered Lunar Surface, Meteors & Asteroids
     if (score >= 20 && score < 40) {
       var moonY = H * 0.68 + cameraY - (20 * BLOCK_H);
       if (moonY < H + 260) {
-        var mGrad = ctx.createLinearGradient(0, moonY - 20, 0, H);
-        mGrad.addColorStop(0, '#4a5568');
-        mGrad.addColorStop(1, '#2d3748');
+        var mGrad = ctx.createLinearGradient(0, moonY - 15, 0, H);
+        mGrad.addColorStop(0, '#94a3b8');
+        mGrad.addColorStop(1, '#334155');
         ctx.fillStyle = mGrad;
         ctx.fillRect(0, moonY - 15, W, H - moonY + 280);
 
-        var moonCraters = [
-          { x: W * 0.16, y: moonY + 28, rx: 38, ry: 12 },
-          { x: W * 0.34, y: moonY + 75, rx: 26, ry: 9 },
-          { x: W * 0.66, y: moonY + 34, rx: 46, ry: 15 },
-          { x: W * 0.84, y: moonY + 82, rx: 34, ry: 11 },
-          { x: W * 0.48, y: moonY + 115, rx: 52, ry: 16 }
+        var craters = [
+          { x: W * 0.16, y: moonY + 46, rx: 42, ry: 15 },
+          { x: W * 0.80, y: moonY + 58, rx: 50, ry: 17 },
+          { x: W * 0.34, y: moonY + 115, rx: 32, ry: 11 },
+          { x: W * 0.66, y: moonY + 128, rx: 38, ry: 13 },
+          { x: W * 0.50, y: moonY + 175, rx: 58, ry: 19 }
         ];
-        for (var cr = 0; cr < moonCraters.length; cr++) {
-          var crt = moonCraters[cr];
-          ctx.fillStyle = 'rgba(160, 174, 192, 0.35)';
-          ctx.beginPath();
-          ctx.ellipse(crt.x, crt.y + 2, crt.rx + 4, crt.ry + 2, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = 'rgba(20, 26, 38, 0.68)';
+        for (var cr = 0; cr < craters.length; cr++) {
+          var crt = craters[cr];
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.34)';
           ctx.beginPath();
           ctx.ellipse(crt.x, crt.y, crt.rx, crt.ry, 0, 0, Math.PI * 2);
           ctx.fill();
+
+          ctx.strokeStyle = 'rgba(226, 232, 240, 0.28)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(crt.x, crt.y + 1, crt.rx, crt.ry, 0, 0.15, Math.PI - 0.15);
+          ctx.stroke();
         }
       }
 
-      for (var asIdx = 0; asIdx < asteroids.length; asIdx++) {
-        var ast = asteroids[asIdx];
+      for (var me = 0; me < meteors.length; me++) {
+        var m = meteors[me];
+        var my = H * 0.68 + cameraY - m.y;
+        if (my > -90 && my < H + 90) {
+          var mx = W / 2 + m.x;
+          var mGradLine = ctx.createLinearGradient(mx, my, mx + m.len, my - m.len * 0.4);
+          mGradLine.addColorStop(0, 'rgba(255, 230, 109, 0.95)');
+          mGradLine.addColorStop(1, 'rgba(255, 117, 143, 0)');
+          ctx.strokeStyle = mGradLine;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(mx, my);
+          ctx.lineTo(mx + m.len, my - m.len * 0.4);
+          ctx.stroke();
+        }
+      }
+
+      for (var as = 0; as < asteroids.length; as++) {
+        var ast = asteroids[as];
         var asy = H * 0.68 + cameraY - ast.y;
-        if (asy > -80 && asy < H + 80) {
+        if (asy > -70 && asy < H + 70) {
           var asx = W / 2 + ast.x;
           ctx.save();
           ctx.translate(asx, asy);
           ctx.rotate(ast.rot);
-
-          ctx.fillStyle = '#718096';
-          ctx.strokeStyle = '#4a5568';
+          ctx.fillStyle = '#64748b';
+          ctx.strokeStyle = '#334155';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          var sides = 8;
-          for (var sd = 0; sd < sides; sd++) {
-            var aAng = (sd / sides) * Math.PI * 2;
-            var rad = ast.r * (0.82 + 0.24 * Math.sin(sd * 2.5 + asIdx));
-            var px = Math.cos(aAng) * rad;
-            var py = Math.sin(aAng) * rad;
-            if (sd === 0) ctx.moveTo(px, py);
+          var pts = 8;
+          for (var pt = 0; pt < pts; pt++) {
+            var ang = (pt / pts) * Math.PI * 2;
+            var rad = ast.r * (0.82 + 0.24 * Math.sin(pt * 2.5));
+            var px = Math.cos(ang) * rad;
+            var py = Math.sin(ang) * rad;
+            if (pt === 0) ctx.moveTo(px, py);
             else ctx.lineTo(px, py);
           }
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
 
-          ctx.fillStyle = '#4a5568';
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
           ctx.beginPath();
-          ctx.arc(-ast.r * 0.28, -ast.r * 0.2, ast.r * 0.24, 0, Math.PI * 2);
-          ctx.arc(ast.r * 0.32, ast.r * 0.22, ast.r * 0.18, 0, Math.PI * 2);
+          ctx.arc(-ast.r * 0.25, -ast.r * 0.15, ast.r * 0.24, 0, Math.PI * 2);
+          ctx.arc(ast.r * 0.28, ast.r * 0.22, ast.r * 0.18, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
       }
-
-      for (var me = 0; me < meteors.length; me++) {
-        var mt = meteors[me];
-        var my = H * 0.68 + cameraY - mt.y;
-        if (my > -80 && my < H + 80) {
-          var mx = W / 2 + mt.x;
-          var mTrail = ctx.createLinearGradient(mx, my, mx - mt.len * 0.5, my - mt.len);
-          mTrail.addColorStop(0, '#ffe66d');
-          mTrail.addColorStop(0.5, '#f77f00');
-          mTrail.addColorStop(1, 'rgba(247, 127, 0, 0)');
-          ctx.strokeStyle = mTrail;
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(mx, my);
-          ctx.lineTo(mx - mt.len * 0.5, my - mt.len);
-          ctx.stroke();
-
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(mx, my, 2.8, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
     }
 
-    // MARS ZONE (Levels 40+): Red Planet Surface, Martians in Flying Saucers & Space Rockets
+    // MARS ZONE (Levels 40+): Red Planet Mountain Terrain, Martians in Flying Saucers & Space Rockets
     if (score >= 40) {
       var marsY = H * 0.68 + cameraY - (40 * BLOCK_H);
       if (marsY < H + 260) {
-        var rGrad = ctx.createLinearGradient(0, marsY - 20, 0, H);
+        var mHorizon = marsY - 15;
+
+        // Distant Martian mountain range silhouette
+        ctx.fillStyle = '#590d22';
+        ctx.beginPath();
+        ctx.moveTo(0, mHorizon + 10);
+        ctx.lineTo(0, mHorizon - 42);
+        ctx.lineTo(W * 0.14, mHorizon - 88);
+        ctx.lineTo(W * 0.28, mHorizon - 46);
+        ctx.lineTo(W * 0.44, mHorizon - 105);
+        ctx.lineTo(W * 0.62, mHorizon - 52);
+        ctx.lineTo(W * 0.78, mHorizon - 92);
+        ctx.lineTo(W * 0.91, mHorizon - 48);
+        ctx.lineTo(W, mHorizon - 72);
+        ctx.lineTo(W, mHorizon + 10);
+        ctx.closePath();
+        ctx.fill();
+
+        // Midground crimson ridge
+        ctx.fillStyle = '#800f2f';
+        ctx.beginPath();
+        ctx.moveTo(0, mHorizon + 10);
+        ctx.lineTo(0, mHorizon - 22);
+        ctx.lineTo(W * 0.19, mHorizon - 54);
+        ctx.lineTo(W * 0.36, mHorizon - 26);
+        ctx.lineTo(W * 0.55, mHorizon - 64);
+        ctx.lineTo(W * 0.73, mHorizon - 28);
+        ctx.lineTo(W * 0.88, mHorizon - 50);
+        ctx.lineTo(W, mHorizon - 24);
+        ctx.lineTo(W, mHorizon + 10);
+        ctx.closePath();
+        ctx.fill();
+
+        // Foreground Martian surface
+        var rGrad = ctx.createLinearGradient(0, mHorizon, 0, H);
         rGrad.addColorStop(0, '#bc4749');
         rGrad.addColorStop(1, '#6a040f');
         ctx.fillStyle = rGrad;
-        ctx.fillRect(0, marsY - 15, W, H - marsY + 280);
+        ctx.fillRect(0, mHorizon, W, H - mHorizon + 280);
       }
 
       for (var al = 0; al < aliens.length; al++) {
         var ufo = aliens[al];
-        var uy = H * 0.68 + cameraY - ufo.y + Math.sin(ufo.phase) * 8;
-        if (uy > -60 && uy < H + 60) {
+        var uy = H * 0.68 + cameraY - ufo.y + Math.sin(ufo.phase) * 12;
+        if (uy > -80 && uy < H + 80) {
           var ux = W / 2 + ufo.x;
-          ctx.save();
-          ctx.translate(ux, uy);
 
-          var beamGrad = ctx.createLinearGradient(0, 6, 0, 42);
-          beamGrad.addColorStop(0, 'rgba(0, 245, 212, 0.32)');
-          beamGrad.addColorStop(1, 'rgba(0, 245, 212, 0)');
-          ctx.fillStyle = beamGrad;
+          ctx.fillStyle = 'rgba(0, 245, 212, 0.12)';
           ctx.beginPath();
-          ctx.moveTo(-10, 6);
-          ctx.lineTo(-22, 42);
-          ctx.lineTo(22, 42);
-          ctx.lineTo(10, 6);
+          ctx.moveTo(ux - 10, uy + 6);
+          ctx.lineTo(ux - 26, uy + 48);
+          ctx.lineTo(ux + 26, uy + 48);
+          ctx.lineTo(ux + 10, uy + 6);
           ctx.closePath();
           ctx.fill();
 
           ctx.fillStyle = '#94a3b8';
           ctx.beginPath();
-          ctx.ellipse(0, 0, 24, 7, 0, 0, Math.PI * 2);
+          ctx.ellipse(ux, uy, 28, 9, 0, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.fillStyle = '#52b788';
+          ctx.fillStyle = '#38b000';
           ctx.beginPath();
-          ctx.arc(0, -5, 5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#000000';
-          ctx.beginPath();
-          ctx.arc(-2, -6, 1.2, 0, Math.PI * 2);
-          ctx.arc(2, -6, 1.2, 0, Math.PI * 2);
+          ctx.arc(ux, uy - 7, 6, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.fillStyle = 'rgba(0, 245, 212, 0.38)';
+          ctx.fillStyle = '#0f172a';
           ctx.beginPath();
-          ctx.arc(0, -4, 11, Math.PI, 0, false);
+          ctx.ellipse(ux - 2.2, uy - 7.5, 1.5, 2.2, -0.2, 0, Math.PI * 2);
+          ctx.ellipse(ux + 2.2, uy - 7.5, 1.5, 2.2, 0.2, 0, Math.PI * 2);
           ctx.fill();
-          ctx.restore();
+
+          ctx.fillStyle = 'rgba(144, 224, 239, 0.45)';
+          ctx.beginPath();
+          ctx.arc(ux, uy - 5, 13, Math.PI, 0);
+          ctx.fill();
+
+          ctx.fillStyle = '#00f5d4';
+          ctx.beginPath();
+          ctx.arc(ux - 16, uy, 2.5, 0, Math.PI * 2);
+          ctx.arc(ux, uy + 2, 2.5, 0, Math.PI * 2);
+          ctx.arc(ux + 16, uy, 2.5, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
 
       for (var rk = 0; rk < rockets.length; rk++) {
         var rkt = rockets[rk];
-        var rky = H * 0.68 + cameraY - rkt.y + Math.cos(time * 3 + rk) * 6;
-        if (rky > -60 && rky < H + 60) {
+        var rky = H * 0.68 + cameraY - rkt.y;
+        if (rky > -70 && rky < H + 70) {
           var rkx = W / 2 + rkt.x;
           ctx.save();
           ctx.translate(rkx, rky);
-          ctx.scale(rkt.dir, 1);
+          if (rkt.dir < 0) ctx.scale(-1, 1);
 
           var flameLen = 16 + Math.sin(time * 28 + rk) * 6;
-          var flameGrad = ctx.createLinearGradient(-18, 0, -18 - flameLen, 0);
-          flameGrad.addColorStop(0, '#ffe66d');
-          flameGrad.addColorStop(0.5, '#ff6b35');
-          flameGrad.addColorStop(1, 'rgba(255, 77, 109, 0)');
-          ctx.fillStyle = flameGrad;
+          ctx.fillStyle = '#ff9f1c';
           ctx.beginPath();
-          ctx.moveTo(-18, -4);
-          ctx.lineTo(-18 - flameLen, 0);
-          ctx.lineTo(-18, 4);
+          ctx.moveTo(-20, -4);
+          ctx.lineTo(-20 - flameLen, 0);
+          ctx.lineTo(-20, 4);
           ctx.closePath();
           ctx.fill();
 
           ctx.fillStyle = '#e63946';
           ctx.beginPath();
-          ctx.moveTo(-10, -5);
-          ctx.lineTo(-20, -12);
-          ctx.lineTo(-16, -4);
-          ctx.closePath();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(-10, 5);
-          ctx.lineTo(-20, 12);
-          ctx.lineTo(-16, 4);
+          ctx.moveTo(-14, -5);
+          ctx.lineTo(-22, -12);
+          ctx.lineTo(-8, -5);
+          ctx.moveTo(-14, 5);
+          ctx.lineTo(-22, 12);
+          ctx.lineTo(-8, 5);
           ctx.closePath();
           ctx.fill();
 
           ctx.fillStyle = '#f8fafc';
           ctx.beginPath();
-          ctx.ellipse(0, 0, 20, 6.5, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 0, 20, 7, 0, 0, Math.PI * 2);
           ctx.fill();
 
           ctx.fillStyle = '#e63946';
           ctx.beginPath();
-          ctx.moveTo(12, -5.2);
-          ctx.lineTo(24, 0);
-          ctx.lineTo(12, 5.2);
+          ctx.moveTo(14, -5);
+          ctx.lineTo(26, 0);
+          ctx.lineTo(14, 5);
           ctx.closePath();
           ctx.fill();
 
           ctx.fillStyle = '#38bdf8';
           ctx.beginPath();
-          ctx.arc(3, 0, 3, 0, Math.PI * 2);
+          ctx.arc(4, 0, 3.2, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
@@ -1338,14 +1415,47 @@
     var startIdx = Math.max(0, stack.length - 30);
     for (var i = startIdx; i < stack.length; i++) {
       var b = stack[i];
-      var floorNum = Math.round(b.y / BLOCK_H);
-      var isRec = (bestScore > 0 && floorNum === bestScore);
-      drawIsoBox(b.x, b.y, b.z, b.w, b.h, b.d, b.hue, isRec);
+      drawIsoBox(b.x, b.y, b.z, b.w, b.h, b.d, b.hue, b.isRecord);
     }
 
-    // 3. Large Glowing High-Score Pointer Arrow
+    // 3. Large Glowing 3D High-Score Pointer Arrow
     if (bestScore > 0) {
-      drawRecordPointer(bestScore, time);
+      var recY = bestScore * BLOCK_H + BLOCK_H * 0.5;
+      var bob = Math.sin(time * 4.5) * 8;
+      var targetEdge = isoToScreen(-currentMaxSpan / 2 - 14 - bob, recY, 0);
+
+      if (targetEdge.y > -80 && targetEdge.y < H + 80) {
+        var ax = targetEdge.x;
+        var ay = targetEdge.y;
+        var arrowColor = passedRecord ? '#00f5d4' : '#ffd166';
+
+        ctx.save();
+        ctx.shadowColor = arrowColor;
+        ctx.shadowBlur = 16;
+        ctx.fillStyle = arrowColor;
+
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax - 24, ay - 16);
+        ctx.lineTo(ax - 24, ay - 7);
+        ctx.lineTo(ax - 54, ay - 7);
+        ctx.lineTo(ax - 54, ay + 7);
+        ctx.lineTo(ax - 24, ay + 7);
+        ctx.lineTo(ax - 24, ay + 16);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+        ctx.font = '900 12px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(passedRecord ? 'NEW BEST!' : 'BEST ' + bestScore, ax - 62, ay + 4);
+        ctx.restore();
+      }
     }
 
     // 4. Perfect snap ripples
@@ -1368,7 +1478,7 @@
       ctx.stroke();
     }
 
-    // 5. Real-time overlap shadow & active moving block
+    // 5. Drop-shadow footprint & active sliding block
     if (gameState === 'PLAYING' && activeBlock) {
       var top = stack[stack.length - 1];
       var shX = Math.max(top.x, activeBlock.x);
@@ -1377,17 +1487,17 @@
       var shD = Math.min(top.z + top.d, activeBlock.z + activeBlock.d) - shZ;
 
       if (shW > 0 && shD > 0) {
-        var sp0 = isoToScreen(shX, activeBlock.y + 0.5, shZ);
-        var sp1 = isoToScreen(shX + shW, activeBlock.y + 0.5, shZ);
-        var sp2 = isoToScreen(shX + shW, activeBlock.y + 0.5, shZ + shD);
-        var sp3 = isoToScreen(shX, activeBlock.y + 0.5, shZ + shD);
+        var s0 = isoToScreen(shX, top.y + BLOCK_H + 0.5, shZ);
+        var s1 = isoToScreen(shX + shW, top.y + BLOCK_H + 0.5, shZ);
+        var s2 = isoToScreen(shX + shW, top.y + BLOCK_H + 0.5, shZ + shD);
+        var s3 = isoToScreen(shX, top.y + BLOCK_H + 0.5, shZ + shD);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
         ctx.beginPath();
-        ctx.moveTo(sp0.x, sp0.y);
-        ctx.lineTo(sp1.x, sp1.y);
-        ctx.lineTo(sp2.x, sp2.y);
-        ctx.lineTo(sp3.x, sp3.y);
+        ctx.moveTo(s0.x, s0.y);
+        ctx.lineTo(s1.x, s1.y);
+        ctx.lineTo(s2.x, s2.y);
+        ctx.lineTo(s3.x, s3.y);
         ctx.closePath();
         ctx.fill();
       }
@@ -1412,7 +1522,7 @@
     requestAnimationFrame(loop);
   }
 
-  initEarthFoundation();
+  resetToEarth();
   requestAnimationFrame(loop);
 })();
 </script>
