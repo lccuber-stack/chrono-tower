@@ -242,7 +242,7 @@
   <h1 id="ov-title">CHRONO TOWER</h1>
   <p id="ov-sub">Build from Earth's surface through the Moon and Mars into deep space.</p>
   <button type="button" id="play-btn">START</button>
-  <div class="credits-text">Special thanks to Emma &amp; Emmy for QA &amp; playtesting support</div>
+  <div class="credits-text">Special thanks to Emma &amp; Emmy for playtesting and ideas</div>
 </div>
 
 <script>
@@ -261,12 +261,16 @@
     iCtx.fillStyle = ig;
     iCtx.fillRect(0, 0, 180, 180);
 
-    iCtx.fillStyle = '#ffffff';
+    iCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     iCtx.beginPath();
-    iCtx.arc(38, 32, 2.2, 0, Math.PI * 2);
-    iCtx.arc(138, 28, 2.5, 0, Math.PI * 2);
-    iCtx.arc(120, 50, 1.8, 0, Math.PI * 2);
-    iCtx.arc(56, 54, 1.6, 0, Math.PI * 2);
+    iCtx.arc(39, 33, 2.25, 0, Math.PI * 2);
+    iCtx.arc(138, 27, 2.7, 0, Math.PI * 2);
+    iCtx.arc(57, 54, 1.65, 0, Math.PI * 2);
+    iCtx.fill();
+
+    iCtx.fillStyle = 'rgba(255, 230, 109, 0.9)';
+    iCtx.beginPath();
+    iCtx.arc(120, 51, 1.8, 0, Math.PI * 2);
     iCtx.fill();
 
     iCtx.fillStyle = '#1b4332';
@@ -278,6 +282,7 @@
     iCtx.closePath();
     iCtx.fill();
 
+    // Draw each block using exact 1.5x scaled coordinates of the 120x120 SVG icon
     function drawMiniBlock(cx, cy, hw, hh, depth, topC, leftC, rightC) {
       iCtx.fillStyle = topC;
       iCtx.beginPath();
@@ -308,14 +313,27 @@
     }
 
     drawMiniBlock(90, 126, 39, 18, 12, '#4cc9f0', '#4361ee', '#3a0ca3');
-    drawMiniBlock(90, 102, 34.5, 16.5, 11, '#00f5d4', '#00bbf9', '#0077b6');
-    drawMiniBlock(90, 78, 30, 15, 10, '#fee440', '#f9c74f', '#f8961e');
-    drawMiniBlock(90, 53, 25.5, 13.5, 9, '#ff70a6', '#f72585', '#b5179e');
+    drawMiniBlock(90, 102, 34.5, 16.5, 10.5, '#00f5d4', '#00bbf9', '#0077b6');
+    drawMiniBlock(90, 78, 30, 15, 10.5, '#fee440', '#f9c74f', '#f8961e');
+    drawMiniBlock(90, 52.5, 25.5, 13.5, 10.5, '#ff70a6', '#f72585', '#b5179e');
 
-    var link = document.createElement('link');
-    link.rel = 'apple-touch-icon';
-    link.href = iconCanvas.toDataURL('image/png');
-    document.head.appendChild(link);
+    var dataUrl = iconCanvas.toDataURL('image/png');
+    var existingLinks = document.querySelectorAll('link[rel*="icon"]');
+    for (var l = 0; l < existingLinks.length; l++) {
+      existingLinks[l].parentNode.removeChild(existingLinks[l]);
+    }
+
+    var appleLink = document.createElement('link');
+    appleLink.rel = 'apple-touch-icon';
+    appleLink.sizes = '180x180';
+    appleLink.href = dataUrl;
+    document.head.appendChild(appleLink);
+
+    var favLink = document.createElement('link');
+    favLink.rel = 'icon';
+    favLink.type = 'image/png';
+    favLink.href = dataUrl;
+    document.head.appendChild(favLink);
   } catch (e) {}
 
   var canvas = document.getElementById('c');
