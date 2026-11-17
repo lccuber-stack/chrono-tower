@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chrono Tower">
 <title>Chrono Tower</title>
 <style>
   * {
@@ -247,6 +253,46 @@
 
 <script>
 (function() {
+  // Auto-refresh standalone Home Screen Web App to always fetch the latest GitHub Pages build
+  // while preserving localStorage high score (chrono_tower_best_v5).
+  (function setupAutoUpdate() {
+    try {
+      var isStandalone = (window.navigator.standalone === true) ||
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+      var currentUrl = new URL(window.location.href);
+      var lastSync = parseInt(sessionStorage.getItem('ct_last_sync') || '0', 10);
+      var nowTs = Date.now();
+
+      // Force a fresh network fetch on cold launch in standalone mode
+      if (isStandalone && !currentUrl.searchParams.has('v') && (nowTs - lastSync > 5000)) {
+        sessionStorage.setItem('ct_last_sync', String(nowTs));
+        currentUrl.searchParams.set('v', String(nowTs));
+        window.location.replace(currentUrl.toString());
+        return;
+      }
+
+      // Check for newer HTML on server when app is brought back to foreground
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible' && isStandalone) {
+          var checkUrl = window.location.origin + window.location.pathname + '?check=' + Date.now();
+          fetch(checkUrl, { cache: 'no-store' })
+            .then(function(res) { return res.text(); })
+            .then(function(remoteHtml) {
+              var remoteMarker = remoteHtml.match(/chrono_tower_best_v\d+/);
+              var localMarker = document.documentElement.innerHTML.match(/chrono_tower_best_v\d+/);
+              if (remoteHtml.length !== document.documentElement.outerHTML.length ||
+                  (remoteMarker && localMarker && remoteMarker[0] !== localMarker[0])) {
+                var reloadUrl = new URL(window.location.href);
+                reloadUrl.searchParams.set('v', String(Date.now()));
+                window.location.replace(reloadUrl.toString());
+              }
+            })
+            .catch(function() {});
+        }
+      });
+    } catch (e) {}
+  })();
+
   // Render the exact 4-Block Ground-to-Space SVG icon onto a 180x180 canvas without path bleed
   (function generateHomeScreenIcon() {
     try {
